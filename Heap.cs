@@ -28,7 +28,7 @@ namespace heaps
         {
             var value = this.Array[0];
             this.Size--;
-            // TODO: Fix down
+            fixDown();
             return value;
         }
 
@@ -58,67 +58,84 @@ namespace heaps
             }
 
             return Array[idx1] > Array[idx2];
-
         }
 
-        private bool needToSwap((int, int)? group1, int idx2)
+        private bool needToSwap(int? idx1, int? idx2)
         {
-            if (group1 == null)
-            {
+            if (idx1 == null || idx2 == null) {
                 return false;
             }
 
-            var (_, g1index) = group1 ?? default;
-            return needToSwap(g1index, idx2);
+            return needToSwap((int) idx1, (int) idx2);
         }
 
         private void fixUp()
         {
             var idx = Size;
-            var parentCheck = getParent(idx);
+            var pindex = getParent(idx);
 
-            while (needToSwap(parentCheck, idx))
+            while (needToSwap(pindex, idx))
             {
-                var (_, pindex) = parentCheck ?? default;
-                swap(idx, pindex);
-                idx = pindex;
-                parentCheck = getParent(idx);
+                var validIdx = (int)pindex;
+                swap(idx, validIdx);
+                idx = validIdx;
+
+                pindex = getParent(idx);
             }
         }
 
-        private (int, int)? getLeftChild(int pindex)
+        private void fixDown()
         {
-            var cindex = pindex * 2 + 1;
-            if (Size > cindex)
-            {
-                var cval = Array[cindex];
-                return (cval, cindex);
-            }
+            var idx = 0;
+            Array[idx] = Array[Size];
 
-            return null;
+            while (hasChild(idx)) {
+                var cidx = (int)getLeftChild(idx);
+
+                if (needToSwap(cidx, cidx + 1)) {
+                    cidx++;
+                }
+
+                if (needToSwap(idx, cidx)) {
+                    swap(idx, cidx);
+                    idx = cidx;
+                }
+                else {
+                    break;
+                }
+            }
         }
 
-        private (int, int)? getRightChild(int pindex)
-        {
-            var cindex = pindex * 2 + 2;
-            if (Size > cindex)
-            {
-                var cval = Array[cindex];
-                return (cval, cindex);
-            }
-
-            return null;
-        }
-
-        private (int, int)? getParent(int cindex)
+        private int? getParent(int cindex)
         {
             var pindex = (int)(Math.Ceiling((double)cindex / 2) - 1);
             if (pindex >= 0)
             {
-                return (Array[pindex], pindex);
+                return pindex;
             }
 
             return null;
+        }
+
+        private int? getLeftChild(int pindex)
+        {
+            var cindex = pindex * 2 + 1;
+            if (Size >= cindex)
+            {
+                return cindex;
+            }
+
+            return null;
+        }
+
+        private int? getRightChild(int pindex)
+        {
+            var left = getLeftChild(pindex);
+            return left != null ? left + 1 : null;
+        }
+
+        private bool hasChild(int pindex) {
+            return getLeftChild(pindex) != null;
         }
 
         private void swap(int idx1, int idx2)
